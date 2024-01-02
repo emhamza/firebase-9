@@ -1,7 +1,13 @@
 import { initializeApp } from 'firebase/app'
 import {
-    getFirestore, collection, getDocs,
-    addDoc, deleteDoc, doc
+    getFirestore, collection, onSnapshot,
+    addDoc, deleteDoc, doc,
+    query, where,
+    //query and where function can used to run the different qurries on firebase
+    //while running the query we also orderd the data by importing orderBy function
+    //we also orderd the data using createdAt funciton while adding new doc into the data like so
+    serverTimestamp,
+    orderBy
 } from 'firebase/firestore'
 
 
@@ -23,18 +29,18 @@ const db = getFirestore()
 //collection Ref
 const colRef = collection(db, 'books')
 
-//get the collection data
-getDocs(colRef)
-    .then((snapshot) => {
-        let books = []
-        snapshot.docs.forEach((doc) => {
-            books.push({...doc.data(), id: doc.id})
-        })
-        console.log(books)
+//query runing
+const q = query(colRef, orderBy('createdAt'))
+
+//real time collection data
+onSnapshot(q, (snapshot) => {
+    let books = []
+    snapshot.docs.forEach((doc) => {
+        books.push({...doc.data(), id: doc.id})
     })
-    .catch(err => {
-        console.log(err.message)
-    })
+    console.log(books)
+})
+
 
 //adding doc
 const addBookForm = document.querySelector('.add')
@@ -43,6 +49,7 @@ addBookForm.addEventListener('submit', (e) => {
     addDoc(colRef, {
         title: addBookForm.title.value,
         author: addBookForm.author.value,
+        createdAt: serverTimestamp()
     })
     .then(() => {
         addBookForm.reset()
